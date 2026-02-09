@@ -473,14 +473,26 @@
     },
 
     updateStats: function () {
-        var total = this.items.length;
-        var available = this.items.filter(function (item) {
+        // Contar total de unidades (suma de cantidades)
+        var totalUnidades = this.items.reduce(function (sum, item) {
+            return sum + (item.cantidad || 1);
+        }, 0);
+        
+        // Contar unidades disponibles
+        var availableUnidades = this.items.filter(function (item) {
             return !item.vendido;
-        }).length;
-        var sold = this.items.filter(function (item) {
+        }).reduce(function (sum, item) {
+            return sum + (item.cantidad || 1);
+        }, 0);
+        
+        // Contar unidades vendidas
+        var soldUnidades = this.items.filter(function (item) {
             return item.vendido;
-        }).length;
+        }).reduce(function (sum, item) {
+            return sum + (item.cantidad || 1);
+        }, 0);
 
+        // Calcular valor del inventario (solo disponibles)
         var inventoryValue = this.items.filter(function (item) {
             return !item.vendido;
         }).reduce(function (sum, item) {
@@ -488,9 +500,9 @@
             return sum + (item.precioCompra * cantidad);
         }, 0);
 
-        document.getElementById('totalItems').textContent = total;
-        document.getElementById('availableItems').textContent = available;
-        document.getElementById('soldItems').textContent = sold;
+        document.getElementById('totalItems').textContent = totalUnidades;
+        document.getElementById('availableItems').textContent = availableUnidades;
+        document.getElementById('soldItems').textContent = soldUnidades;
         document.getElementById('inventoryValue').textContent = inventoryValue.toFixed(2) + ' EUR';
     },
 
