@@ -5,7 +5,7 @@
 Tu inventario ahora se sincroniza **automáticamente** entre dispositivos. ¡Sin pasos complicados!
 
 ### ? **Ventajas:**
-- ?? **100% Gratis** - Usa JSONBin.io (servicio gratuito ilimitado)
+- ?? **100% Gratis** - Usa JSON Storage (servicio gratuito ilimitado)
 - ?? **1 Solo Clic** - No copiar/pegar, todo automático
 - ?? **Seguro** - Datos privados en la nube
 - ?? **Multi-dispositivo** - PC, tablet, móvil
@@ -219,7 +219,7 @@ No pasa nada. Simplemente:
 
 ## ?? **Privacidad y Seguridad**
 
-- ? Tus datos están en **JSONBin.io** (servicio confiable usado por miles de apps)
+- ? Tus datos están en **JSON Storage** (servicio confiable usado por miles de apps)
 - ? Conexión cifrada (HTTPS)
 - ? Solo quien tenga tu código puede acceder
 - ? Respaldo automático en la nube

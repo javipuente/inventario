@@ -696,7 +696,7 @@
         reader.readAsText(file, 'UTF-8');
     },
 
-    // ========== FUNCIONES DE SINCRONIZACIÓN CON JSONBIN.IO ==========
+    // ========== FUNCIONES DE SINCRONIZACIÓN CON JSON STORAGE ==========
     
     checkLastSync: function () {
         var lastSync = localStorage.getItem('lastSyncTime');
@@ -727,22 +727,16 @@
         
         self.showNotification('📥 Descargando datos...', 2000);
         
-        var url = 'https://api.jsonbin.io/v3/b/' + this.binId + '/latest';
+        var url = 'https://jsonstorage.net/api/items/' + this.binId;
         
-        fetch(url, {
-            headers: {
-                'X-Master-Key': '$2b$10$Qs0qV8Y7KQZ0Z8Y7KQZ0ZuHqN8Y7KQZ0Z8Y7KQZ0Z8Y7KQZ0Z8Y7KQ'
-            }
-        })
+        fetch(url)
         .then(function(response) {
             if (!response.ok) {
                 throw new Error('Código de sincronización inválido');
             }
             return response.json();
         })
-        .then(function(result) {
-            var data = result.record;
-            
+        .then(function(data) {
             if (data.items && Array.isArray(data.items)) {
                 var confirmMsg = '¿Descargar ' + data.items.length + ' artículos?\n\n' +
                                'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
@@ -786,12 +780,11 @@
         };
         
         if (this.binId) {
-            // Actualizar bin existente
-            fetch('https://api.jsonbin.io/v3/b/' + this.binId, {
+            // Actualizar storage existente
+            fetch('https://jsonstorage.net/api/items/' + this.binId, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': '$2b$10$Qs0qV8Y7KQZ0Z8Y7KQZ0ZuHqN8Y7KQZ0Z8Y7KQZ0Z8Y7KQZ0Z8Y7KQ'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(dataToUpload)
             })
@@ -807,23 +800,20 @@
             })
             .catch(function(error) {
                 console.error('Error actualizando:', error);
-                self.createNewBin(dataToUpload);
+                self.createNewStorage(dataToUpload);
             });
         } else {
-            this.createNewBin(dataToUpload);
+            this.createNewStorage(dataToUpload);
         }
     },
 
-    createNewBin: function (data) {
+    createNewStorage: function (data) {
         var self = this;
         
-        fetch('https://api.jsonbin.io/v3/b', {
+        fetch('https://jsonstorage.net/api/items', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': '$2b$10$Qs0qV8Y7KQZ0Z8Y7KQZ0ZuHqN8Y7KQZ0Z8Y7KQZ0Z8Y7KQZ0Z8Y7KQ',
-                'X-Bin-Name': 'inventario-sync',
-                'X-Bin-Private': 'false'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         })
@@ -834,25 +824,25 @@
             return response.json();
         })
         .then(function(result) {
-            var binId = result.metadata.id;
-            self.saveBinId(binId);
+            var storageId = result.uri.split('/').pop();
+            self.saveBinId(storageId);
             localStorage.setItem('lastSyncTime', new Date().toISOString());
             
             var message = '✅ Datos subidos a la nube\n\n' +
                          '🔑 TU CÓDIGO DE SINCRONIZACIÓN:\n' +
-                         binId + '\n\n' +
+                         storageId + '\n\n' +
                          '⚠️ IMPORTANTE: Guarda este código para sincronizar en otros dispositivos.\n\n' +
                          '¿Copiar código al portapapeles?';
             
             if (confirm(message)) {
-                self.copyToClipboard(binId);
+                self.copyToClipboard(storageId);
                 self.showNotification('📋 Código copiado. Pégalo en tus otros dispositivos.', 5000);
             } else {
-                alert('Tu código: ' + binId + '\n\nGuárdalo en un lugar seguro.');
+                alert('Tu código: ' + storageId + '\n\nGuárdalo en un lugar seguro.');
             }
         })
         .catch(function(error) {
-            console.error('Error creando bin:', error);
+            console.error('Error creando storage:', error);
             self.showNotification('❌ Error al subir: ' + error.message, 5000);
         });
     },

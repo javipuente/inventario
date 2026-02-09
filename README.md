@@ -67,7 +67,7 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 ## 💾 Almacenamiento de Datos
 
 - **Local Storage**: Los datos se guardan automáticamente en el navegador
-- **Sincronización en la nube**: Sube/descarga con 1 clic usando JSONBin.io (gratis y sin cuenta)
+- **Sincronización en la nube**: Sube/descarga con 1 clic usando JSON Storage (gratis y sin cuenta)
 - **Backup automático**: La nube mantiene tus datos seguros
 - **Las fotos** se guardan en Base64 (comprimidas automáticamente)
 
