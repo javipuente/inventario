@@ -6,6 +6,7 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 
 - ✅ **Añadir artículos** con toda la información necesaria
 - 📊 **Control de cantidad** - gestiona múltiples unidades del mismo artículo
+- 📏 **Gestión de tallas** - XS, S, M, L, XL
 - 📸 **Subir fotos** de los productos
 - 💰 **Gestión de precios** (compra y venta)
 - 🔄 **Marcar como vendido/disponible**
@@ -14,6 +15,7 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 - 🔍 **Buscar y filtrar** por nombre o descripción
 - 📊 **Estadísticas en tiempo real**
 - 💾 **Almacenamiento local** (los datos persisten al cerrar el navegador)
+- ☁️ **Sincronización multi-dispositivo** - Usa GitHub como base de datos (GRATIS)
 - 📥 **Exportar e Importar** Excel/CSV para backup
 - 📅 **Control de devoluciones** con alertas de vencimiento
 - 📱 **Diseño responsive** (funciona en móviles y tablets)
@@ -22,6 +24,19 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 
 **Usa la aplicación directamente desde tu navegador:**
 👉 https://javipuente.github.io/inventario/
+
+## 🔄 Sincronización Multi-Dispositivo (GRATIS)
+
+¡Ahora puedes usar tu inventario en **múltiples dispositivos**!
+
+**Cómo funciona:**
+1. Haz clic en **☁️ Subir** para guardar tus datos en GitHub
+2. En otro dispositivo, haz clic en **☁️ Descargar** para traer los datos
+3. ¡Listo! Tus datos están sincronizados
+
+**100% Gratis** - Usa tu repositorio de GitHub como base de datos.
+
+📖 **Guía completa**: [GUIA_SINCRONIZACION.md](GUIA_SINCRONIZACION.md)
 
 ## 🗂️ Cómo usar
 
@@ -51,9 +66,9 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 ## 💾 Almacenamiento de Datos
 
 - **Local Storage**: Los datos se guardan automáticamente en el navegador
+- **GitHub Sync**: Sincroniza entre dispositivos usando tu repositorio (gratis)
 - **Backup en CSV**: Exporta regularmente como respaldo
 - **Las fotos** se guardan en Base64 (comprimidas automáticamente)
-- **Sincronización entre dispositivos**: Actualmente no disponible (solo local)
 
 ## ⚠️ Importante
 
