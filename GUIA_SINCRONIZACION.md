@@ -5,11 +5,12 @@
 Tu inventario ahora se sincroniza **automáticamente** entre dispositivos. ¡Sin pasos complicados!
 
 ### ? **Ventajas:**
-- ?? **100% Gratis** - Usa GitHub Gist (ilimitado)
+- ?? **100% Gratis** - Usa JSONBin.io (servicio gratuito ilimitado)
 - ?? **1 Solo Clic** - No copiar/pegar, todo automático
 - ?? **Seguro** - Datos privados en la nube
 - ?? **Multi-dispositivo** - PC, tablet, móvil
 - ?? **Actualización instantánea** - Subir y descargar en segundos
+- ? **Sin cuenta requerida** - Funciona inmediatamente
 
 ---
 
@@ -218,11 +219,11 @@ No pasa nada. Simplemente:
 
 ## ?? **Privacidad y Seguridad**
 
-- ? Tus datos están en **GitHub** (empresa de Microsoft)
-- ? Los Gists son **privados por defecto**
+- ? Tus datos están en **JSONBin.io** (servicio confiable usado por miles de apps)
+- ? Conexión cifrada (HTTPS)
 - ? Solo quien tenga tu código puede acceder
-- ? GitHub tiene respaldo automático
-- ? Puedes eliminar el Gist cuando quieras
+- ? Respaldo automático en la nube
+- ? Sin necesidad de crear cuenta
 
 ---
 

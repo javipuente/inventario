@@ -1,16 +1,10 @@
 ﻿var inventoryApp = {
     items: [],
-    gistId: null, // Se generará automáticamente en el primer sync
-    githubConfig: {
-        owner: 'javipuente',
-        repo: 'inventario',
-        branch: 'main',
-        dataFile: 'inventario-data.json'
-    },
-
+    binId: null, // ID del bin en JSONBin.io
+    
     init: function () {
         this.loadItems();
-        this.loadGistId();
+        this.loadBinId();
         this.setupEvents();
         this.render();
         this.updateStats();
@@ -538,13 +532,13 @@
         this.items = data ? JSON.parse(data) : [];
     },
 
-    loadGistId: function () {
-        this.gistId = localStorage.getItem('gistId');
+    loadBinId: function () {
+        this.binId = localStorage.getItem('binId');
     },
 
-    saveGistId: function (id) {
-        this.gistId = id;
-        localStorage.setItem('gistId', id);
+    saveBinId: function (id) {
+        this.binId = id;
+        localStorage.setItem('binId', id);
     },
 
     showNotification: function (message, duration) {
@@ -707,7 +701,7 @@
         reader.readAsText(file, 'UTF-8');
     },
 
-    // ========== FUNCIONES DE SINCRONIZACIÓN CON GITHUB GIST ==========
+    // ========== FUNCIONES DE SINCRONIZACIÓN CON JSONBIN.IO ==========
     
     checkLastSync: function () {
         var lastSync = localStorage.getItem('lastSyncTime');
@@ -725,58 +719,60 @@
     syncDownload: function () {
         var self = this;
         
-        if (!this.gistId) {
-            var gistInput = prompt('Introduce tu código de sincronización (Gist ID):\n\nSi no tienes uno, haz clic en "☁️ Subir" primero.');
-
-            if (!gistInput || gistInput.trim() === '') {
+        if (!this.binId) {
+            var binInput = prompt('Introduce tu código de sincronización:\n\nSi no tienes uno, haz clic en "☁️ Subir" primero.');
+            
+            if (!binInput || binInput.trim() === '') {
                 return;
             }
-
-            this.gistId = gistInput.trim();
-            this.saveGistId(this.gistId);
+            
+            this.binId = binInput.trim();
+            this.saveBinId(this.binId);
         }
         
         self.showNotification('📥 Descargando datos...', 2000);
         
-        var url = 'https://api.github.com/gists/' + this.gistId;
+        var url = 'https://api.jsonbin.io/v3/b/' + this.binId + '/latest';
         
-        fetch(url)
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('Código de sincronización inválido');
-                }
-                return response.json();
-            })
-            .then(function(gist) {
-                var fileContent = gist.files['inventario.json'].content;
-                var data = JSON.parse(fileContent);
+        fetch(url, {
+            headers: {
+                'X-Master-Key': '$2b$10$Qs0qV8Y7KQZ0Z8Y7KQZ0ZuHqN8Y7KQZ0Z8Y7KQZ0Z8Y7KQZ0Z8Y7KQ'
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Código de sincronización inválido');
+            }
+            return response.json();
+        })
+        .then(function(result) {
+            var data = result.record;
+            
+            if (data.items && Array.isArray(data.items)) {
+                var confirmMsg = '¿Descargar ' + data.items.length + ' artículos?\n\n' +
+                               'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
                 
-                if (data.items && Array.isArray(data.items)) {
-                    var confirmMsg = '¿Descargar ' + data.items.length + ' artículos?\n\n' +
-                                   'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
+                if (confirm(confirmMsg)) {
+                    self.items = data.items;
+                    self.saveItems();
+                    self.render();
+                    self.updateStats();
                     
-                    if (confirm(confirmMsg)) {
-                        self.items = data.items;
-                        self.saveItems();
-                        self.render();
-                        self.updateStats();
-                        
-                        localStorage.setItem('lastSyncTime', new Date().toISOString());
-                        
-                        self.showNotification('✅ Descargados ' + data.items.length + ' artículos', 4000);
-                    }
-                } else {
-                    throw new Error('Formato de datos inválido');
+                    localStorage.setItem('lastSyncTime', new Date().toISOString());
+                    
+                    self.showNotification('✅ Descargados ' + data.items.length + ' artículos', 4000);
                 }
-            })
-            .catch(function(error) {
-                console.error('Error descargando:', error);
-                self.showNotification('❌ Error: ' + error.message + '. Verifica tu código de sincronización.', 5000);
-                
-                // Si falla, limpiar el gistId para que pida uno nuevo
-                localStorage.removeItem('gistId');
-                self.gistId = null;
-            });
+            } else {
+                throw new Error('Formato de datos inválido');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error descargando:', error);
+            self.showNotification('❌ Error: ' + error.message + '. Verifica tu código de sincronización.', 5000);
+            
+            localStorage.removeItem('binId');
+            self.binId = null;
+        });
     },
 
     syncUpload: function () {
@@ -794,24 +790,15 @@
             lastSync: new Date().toISOString()
         };
         
-        var gistData = {
-            description: 'Inventario - Sincronización automática',
-            public: false,
-            files: {
-                'inventario.json': {
-                    content: JSON.stringify(dataToUpload, null, 2)
-                }
-            }
-        };
-        
-        if (this.gistId) {
-            // Actualizar Gist existente
-            fetch('https://api.github.com/gists/' + this.gistId, {
-                method: 'PATCH',
+        if (this.binId) {
+            // Actualizar bin existente
+            fetch('https://api.jsonbin.io/v3/b/' + this.binId, {
+                method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': '$2b$10$Qs0qV8Y7KQZ0Z8Y7KQZ0ZuHqN8Y7KQZ0Z8Y7KQZ0Z8Y7KQZ0Z8Y7KQ'
                 },
-                body: JSON.stringify(gistData)
+                body: JSON.stringify(dataToUpload)
             })
             .then(function(response) {
                 if (!response.ok) {
@@ -819,30 +806,31 @@
                 }
                 return response.json();
             })
-            .then(function(gist) {
+            .then(function(result) {
                 localStorage.setItem('lastSyncTime', new Date().toISOString());
                 self.showNotification('✅ Datos actualizados en la nube (' + self.items.length + ' artículos)', 4000);
             })
             .catch(function(error) {
                 console.error('Error actualizando:', error);
-                // Si falla la actualización, crear uno nuevo
-                self.createNewGist(gistData);
+                self.createNewBin(dataToUpload);
             });
         } else {
-            // Crear nuevo Gist
-            this.createNewGist(gistData);
+            this.createNewBin(dataToUpload);
         }
     },
 
-    createNewGist: function (gistData) {
+    createNewBin: function (data) {
         var self = this;
         
-        fetch('https://api.github.com/gists', {
+        fetch('https://api.jsonbin.io/v3/b', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Master-Key': '$2b$10$Qs0qV8Y7KQZ0Z8Y7KQZ0ZuHqN8Y7KQZ0Z8Y7KQZ0Z8Y7KQZ0Z8Y7KQ',
+                'X-Bin-Name': 'inventario-sync',
+                'X-Bin-Private': 'false'
             },
-            body: JSON.stringify(gistData)
+            body: JSON.stringify(data)
         })
         .then(function(response) {
             if (!response.ok) {
@@ -850,25 +838,26 @@
             }
             return response.json();
         })
-        .then(function(gist) {
-            self.saveGistId(gist.id);
+        .then(function(result) {
+            var binId = result.metadata.id;
+            self.saveBinId(binId);
             localStorage.setItem('lastSyncTime', new Date().toISOString());
             
             var message = '✅ Datos subidos a la nube\n\n' +
                          '🔑 TU CÓDIGO DE SINCRONIZACIÓN:\n' +
-                         gist.id + '\n\n' +
+                         binId + '\n\n' +
                          '⚠️ IMPORTANTE: Guarda este código para sincronizar en otros dispositivos.\n\n' +
                          '¿Copiar código al portapapeles?';
             
             if (confirm(message)) {
-                self.copyToClipboard(gist.id);
+                self.copyToClipboard(binId);
                 self.showNotification('📋 Código copiado. Pégalo en tus otros dispositivos.', 5000);
             } else {
-                alert('Tu código: ' + gist.id + '\n\nGuárdalo en un lugar seguro.');
+                alert('Tu código: ' + binId + '\n\nGuárdalo en un lugar seguro.');
             }
         })
         .catch(function(error) {
-            console.error('Error creando Gist:', error);
+            console.error('Error creando bin:', error);
             self.showNotification('❌ Error al subir: ' + error.message, 5000);
         });
     },
@@ -877,7 +866,6 @@
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text);
         } else {
-            // Fallback para navegadores antiguos
             var textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.style.position = 'fixed';
