@@ -715,83 +715,107 @@
 
         var self = this;
         
-        // Usar cors.sh que funciona mejor con Zara
-        var proxyUrl = 'https://proxy.cors.sh/' + url;
+        // Lista de proxies CORS para intentar (fallback automático)
+        var proxies = [
+            { name: 'CORS.SH', url: 'https://proxy.cors.sh/' + url, headers: { 'x-cors-api-key': 'temp_1234567890abcdef' } },
+            { name: 'AllOrigins', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url), headers: {} },
+            { name: 'ThingProxy', url: 'https://thingproxy.freeboard.io/fetch/' + url, headers: {} },
+            { name: 'CodeTabs', url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), headers: {} }
+        ];
         
-        self.showNotification('⏳ Extrayendo datos de Zara...' );
+        var currentProxyIndex = 0;
         
-        fetch(proxyUrl, {
-            headers: {
-                'x-cors-api-key': 'temp_1234567890abcdef'
+        self.showNotification('⏳ Extrayendo datos de Zara...');
+        
+        function tryProxy() {
+            if (currentProxyIndex >= proxies.length) {
+                // Todos los proxies fallaron
+                self.showNotification('⚠️ No se pudo extraer el precio. Los campos nombre y referencia se completaron.');
+                return;
             }
-        })
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('Error al conectar con Zara');
-                }
-                return response.text();
-            })
-            .then(function(html) {
-                var precioMatch = html.match(/<span class="money-amount__main">([0-9,]+)\s*EUR<\/span>/);
-                if (precioMatch) {
-                    var precio = parseFloat(precioMatch[1].replace(',', '.'));
-                    document.getElementById('precioCompra').value = precio.toFixed(2);
-                }
-                
-                var imagenMatch = html.match(/<img[^>]+class="[^"]*media-image__image[^"]*"[^>]+src="([^"]+)"/);
-                if (!imagenMatch) {
-                    imagenMatch = html.match(/<img[^>]+src="(https:\/\/static\.zara\.net\/photos[^"]+)"/);
-                }
-                if (!imagenMatch) {
-                    imagenMatch = html.match(/picture__image[^>]+src="([^"]+)"/);
-                }
-                
-                if (imagenMatch) {
-                    var imgUrl = imagenMatch[1];
-                    if (!imgUrl.startsWith('http')) {
-                        imgUrl = 'https:' + imgUrl;
+            
+            var proxy = proxies[currentProxyIndex];
+            console.log('Intentando con proxy:', proxy.name);
+            
+            fetch(proxy.url, { headers: proxy.headers })
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Proxy ' + proxy.name + ' falló');
+                    }
+                    return response.text();
+                })
+                .then(function(html) {
+                    // Buscar precio
+                    var precioMatch = html.match(/<span class="money-amount__main">([0-9,]+)\s*EUR<\/span>/);
+                    if (!precioMatch) {
+                        precioMatch = html.match(/price["\s:]+([0-9]+[,.]?[0-9]*)/i);
                     }
                     
-                    // Descargar imagen directamente (las imágenes de Zara no tienen CORS)
-                    fetch(imgUrl)
-                        .then(function(imgResponse) {
-                            return imgResponse.blob();
-                        })
-                        .then(function(blob) {
-                            var reader = new FileReader();
-                            reader.onloadend = function() {
-                                self.resizeImage(reader.result, function(resizedImage) {
-                                    document.getElementById('preview').src = resizedImage;
-                                    document.getElementById('previewContainer').style.display = 'block';
-                                    self.showNotification('✅ Datos e imagen extraidos de Zara correctamente');
-                                });
-                            };
-                            reader.readAsDataURL(blob);
-                        })
-                        .catch(function(imgError) {
-                            console.log('No se pudo cargar la imagen:', imgError);
-                            if (precioMatch) {
-                                self.showNotification('✅ Datos extraidos de Zara (sin imagen)');
-                            } else {
-                                self.showNotification('ℹ️ Nombre y referencia extraidos. Ingresa el precio manualmente.');
-                            }
-                        });
-                } else {
                     if (precioMatch) {
-                        self.showNotification('✅ Datos extraidos de Zara correctamente');
-                    } else {
-                        self.showNotification('ℹ️ Nombre y referencia extraidos. Ingresa el precio manualmente.');
+                        var precio = parseFloat(precioMatch[1].replace(',', '.'));
+                        document.getElementById('precioCompra').value = precio.toFixed(2);
                     }
-                }
-            })
-            .catch(function(error) {
-                console.log('Error al extraer datos de Zara:', error);
-                if (productInfo && productInfo.nombre) {
-                    self.showNotification('ℹ️ Nombre y referencia extraidos. Completa los demás campos manualmente.');
-                } else {
-                    self.showNotification('⚠️ No se pudo conectar. Verifica la URL o completa manualmente.');
-                }
-            });
+                    
+                    // Buscar imagen
+                    var imagenMatch = html.match(/<img[^>]+class="[^"]*media-image__image[^"]*"[^>]+src="([^"]+)"/);
+                    if (!imagenMatch) {
+                        imagenMatch = html.match(/<img[^>]+src="(https:\/\/static\.zara\.net\/photos[^"]+)"/);
+                    }
+                    if (!imagenMatch) {
+                        imagenMatch = html.match(/picture__image[^>]+src="([^"]+)"/);
+                    }
+                    if (!imagenMatch) {
+                        imagenMatch = html.match(/"image":\s*"(https:\/\/[^"]+)"/);
+                    }
+                    
+                    if (imagenMatch) {
+                        var imgUrl = imagenMatch[1];
+                        if (!imgUrl.startsWith('http')) {
+                            imgUrl = 'https:' + imgUrl;
+                        }
+                        
+                        // Las imágenes de Zara se pueden descargar directamente
+                        fetch(imgUrl)
+                            .then(function(imgResponse) {
+                                return imgResponse.blob();
+                            })
+                            .then(function(blob) {
+                                var reader = new FileReader();
+                                reader.onloadend = function() {
+                                    self.resizeImage(reader.result, function(resizedImage) {
+                                        document.getElementById('preview').src = resizedImage;
+                                        document.getElementById('previewContainer').style.display = 'block';
+                                        self.showNotification('✅ Datos e imagen extraidos correctamente (vía ' + proxy.name + ')');
+                                    });
+                                };
+                                reader.readAsDataURL(blob);
+                            })
+                            .catch(function(imgError) {
+                                console.log('No se pudo cargar la imagen:', imgError);
+                                if (precioMatch) {
+                                    self.showNotification('✅ Datos extraidos correctamente (vía ' + proxy.name + ', sin imagen)');
+                                } else {
+                                    self.showNotification('ℹ️ Nombre y referencia extraidos. Completa el precio manualmente.');
+                                }
+                            });
+                    } else {
+                        if (precioMatch) {
+                            self.showNotification('✅ Datos extraidos correctamente (vía ' + proxy.name + ')');
+                        } else {
+                            self.showNotification('ℹ️ Nombre y referencia extraidos. Completa el precio manualmente.');
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.log('Proxy ' + proxy.name + ' falló:', error);
+                    // Intentar con el siguiente proxy
+                    currentProxyIndex++;
+                    tryProxy();
+                });
+        }
+        
+        // Iniciar con el primer proxy
+        tryProxy();
     }
 };
 
