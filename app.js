@@ -331,11 +331,30 @@
         
         if (item.vendido) {
             // Si está vendido, devolverlo a disponible
-            item.vendido = false;
+            // Buscar si existe un artículo disponible con el mismo nombre y talla
+            var itemDisponible = this.items.find(function (i) {
+                return i.nombre === item.nombre && 
+                       i.talla === item.talla && 
+                       !i.vendido && 
+                       i.id !== item.id;
+            });
+            
+            if (itemDisponible) {
+                // Si existe, aumentar su cantidad y eliminar el vendido
+                itemDisponible.cantidad += item.cantidad;
+                this.items = this.items.filter(function (i) {
+                    return i.id !== item.id;
+                });
+                this.showNotification('Devuelto a disponible. Total: ' + itemDisponible.cantidad + ' unidades');
+            } else {
+                // Si no existe, simplemente marcar como disponible
+                item.vendido = false;
+                this.showNotification('Artículo devuelto a disponible');
+            }
+            
             this.saveItems();
             this.render();
             this.updateStats();
-            this.showNotification('Artículo devuelto a disponible');
         } else {
             // Si está disponible, vender una unidad
             if (item.cantidad > 1) {
