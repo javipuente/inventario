@@ -22,19 +22,21 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 **Usa la aplicación directamente desde tu navegador:**
 👉 https://javipuente.github.io/inventario/
 
-## 🆕 Nueva Funcionalidad: Extracción de Datos de Zara
+## 🆕 Funcionalidad: Extracción de Datos de Zara
 
-Ahora puedes **pegar una URL de Zara.com** y la aplicación extraerá automáticamente:
-- ✅ Nombre del producto
-- ✅ Referencia/código
-- ✅ Precio
-- ✅ Imagen del producto
+Puedes **pegar una URL de Zara.com** y la aplicación extraerá automáticamente:
+- ✅ **Nombre del producto** (desde la URL)
+- ✅ **Referencia/código** (desde la URL)
+- ℹ️ **Precio e imagen**: Por limitaciones de CORS, debes copiarlos manualmente
 
 **¿Cómo usarlo?**
 1. Ve a www.zara.com y encuentra un producto
 2. Copia la URL completa (ej: `https://www.zara.com/es/es/chaqueta-bomber-p04344655.html`)
 3. Pégala en el campo "URL de Zara" en tu inventario
-4. ¡Los datos se completarán automáticamente!
+4. **El nombre y referencia se completarán automáticamente**
+5. La aplicación te ofrecerá abrir la página de Zara para que copies el precio e imagen manualmente
+
+**💡 Tip**: Es más rápido que escribir todo manualmente, especialmente las referencias largas de Zara.
 
 ⚠️ **Si encuentras problemas CORS**: Consulta [SOLUCION_CORS_ZARA.md](SOLUCION_CORS_ZARA.md) para soluciones
 
