@@ -801,7 +801,7 @@
         var message = '✅ Archivo guardado: ' + nombreArchivo + '\n\n' +
                      '📁 Contiene ' + this.items.length + ' artículos\n\n' +
                      '💡 IMPORTANTE: Guarda este archivo en un lugar seguro.\n' +
-                     'Para sincronizar en otro dispositivo, haz clic en "☁️ Descargar" y selecciona este archivo.';
+                     'Para sincronizar en otro dispositivo, haz clic en "📥 Importar" y selecciona este archivo.';
         
         alert(message);
         this.showNotification('📦 Backup creado con ' + this.items.length + ' artículos', 4000);
