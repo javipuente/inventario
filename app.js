@@ -696,7 +696,7 @@
         reader.readAsText(file, 'UTF-8');
     },
 
-    // ========== FUNCIONES DE SINCRONIZACIÓN CON JSON STORAGE ==========
+    // ========== FUNCIONES DE SINCRONIZACIÓN MANUAL (SIN SERVICIOS EXTERNOS) ==========
     
     checkLastSync: function () {
         var lastSync = localStorage.getItem('lastSyncTime');
@@ -706,145 +706,111 @@
             var diffHours = Math.floor((now - syncDate) / (1000 * 60 * 60));
             
             if (diffHours > 24) {
-                this.showNotification('⚠️ Hace más de 24h que no sincronizas. Considera descargar los datos más recientes.', 5000);
+                this.showNotification('⚠️ Hace más de 24h que no haces backup. Considera exportar tus datos.', 5000);
             }
         }
     },
 
     syncDownload: function () {
+        // Simular clic en importar archivo
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+        fileInput.style.display = 'none';
+        
         var self = this;
         
-        if (!this.binId) {
-            var binInput = prompt('Introduce tu código de sincronización:\n\nSi no tienes uno, haz clic en "☁️ Subir" primero.');
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
             
-            if (!binInput || binInput.trim() === '') {
-                return;
-            }
-            
-            this.binId = binInput.trim();
-            this.saveBinId(this.binId);
-        }
-        
-        self.showNotification('📥 Descargando datos...', 2000);
-        
-        var url = 'https://jsonstorage.net/api/items/' + this.binId;
-        
-        fetch(url)
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Código de sincronización inválido');
-            }
-            return response.json();
-        })
-        .then(function(data) {
-            if (data.items && Array.isArray(data.items)) {
-                var confirmMsg = '¿Descargar ' + data.items.length + ' artículos?\n\n' +
-                               'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
-                
-                if (confirm(confirmMsg)) {
-                    self.items = data.items;
-                    self.saveItems();
-                    self.render();
-                    self.updateStats();
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    var data = JSON.parse(event.target.result);
                     
-                    localStorage.setItem('lastSyncTime', new Date().toISOString());
-                    
-                    self.showNotification('✅ Descargados ' + data.items.length + ' artículos', 4000);
+                    if (data.items && Array.isArray(data.items)) {
+                        var confirmMsg = '¿Cargar ' + data.items.length + ' artículos?\n\n' +
+                                       'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
+                        
+                        if (confirm(confirmMsg)) {
+                            self.items = data.items;
+                            self.saveItems();
+                            self.render();
+                            self.updateStats();
+                            
+                            localStorage.setItem('lastSyncTime', new Date().toISOString());
+                            
+                            self.showNotification('✅ Cargados ' + data.items.length + ' artículos desde el archivo', 4000);
+                        }
+                    } else {
+                        throw new Error('Formato de archivo inválido');
+                    }
+                } catch (error) {
+                    self.showNotification('❌ Error: Archivo inválido. Debe ser un JSON válido.', 5000);
+                    console.error('Error cargando archivo:', error);
                 }
-            } else {
-                throw new Error('Formato de datos inválido');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error descargando:', error);
-            self.showNotification('❌ Error: ' + error.message + '. Verifica tu código de sincronización.', 5000);
+            };
             
-            localStorage.removeItem('binId');
-            self.binId = null;
+            reader.readAsText(file);
         });
+        
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        document.body.removeChild(fileInput);
     },
 
     syncUpload: function () {
         var self = this;
         
         if (this.items.length === 0) {
-            this.showNotification('⚠️ No hay artículos para subir', 3000);
+            this.showNotification('⚠️ No hay artículos para exportar', 3000);
             return;
         }
         
-        self.showNotification('📤 Subiendo datos...', 2000);
-        
-        var dataToUpload = {
+        var dataToExport = {
             items: this.items,
-            lastSync: new Date().toISOString()
+            lastSync: new Date().toISOString(),
+            version: '1.0'
         };
         
-        if (this.binId) {
-            // Actualizar storage existente
-            fetch('https://jsonstorage.net/api/items/' + this.binId, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dataToUpload)
-            })
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('No se pudo actualizar. Creando nuevo...');
-                }
-                return response.json();
-            })
-            .then(function(result) {
-                localStorage.setItem('lastSyncTime', new Date().toISOString());
-                self.showNotification('✅ Datos actualizados en la nube (' + self.items.length + ' artículos)', 4000);
-            })
-            .catch(function(error) {
-                console.error('Error actualizando:', error);
-                self.createNewStorage(dataToUpload);
-            });
-        } else {
-            this.createNewStorage(dataToUpload);
-        }
+        var jsonContent = JSON.stringify(dataToExport, null, 2);
+        var blob = new Blob([jsonContent], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        
+        var fecha = new Date();
+        var nombreArchivo = 'inventario_' + 
+                           fecha.getFullYear() + 
+                           ('0' + (fecha.getMonth() + 1)).slice(-2) + 
+                           ('0' + fecha.getDate()).slice(-2) + '_' +
+                           ('0' + fecha.getHours()).slice(-2) + 
+                           ('0' + fecha.getMinutes()).slice(-2) + 
+                           '.json';
+        
+        link.href = url;
+        link.download = nombreArchivo;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        localStorage.setItem('lastSyncTime', new Date().toISOString());
+        
+        var message = '✅ Archivo guardado: ' + nombreArchivo + '\n\n' +
+                     '📁 Contiene ' + this.items.length + ' artículos\n\n' +
+                     '💡 IMPORTANTE: Guarda este archivo en un lugar seguro.\n' +
+                     'Para sincronizar en otro dispositivo, haz clic en "☁️ Descargar" y selecciona este archivo.';
+        
+        alert(message);
+        this.showNotification('📦 Backup creado con ' + this.items.length + ' artículos', 4000);
     },
 
     createNewStorage: function (data) {
-        var self = this;
-        
-        fetch('https://jsonstorage.net/api/items', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error('No se pudo crear la sincronización');
-            }
-            return response.json();
-        })
-        .then(function(result) {
-            var storageId = result.uri.split('/').pop();
-            self.saveBinId(storageId);
-            localStorage.setItem('lastSyncTime', new Date().toISOString());
-            
-            var message = '✅ Datos subidos a la nube\n\n' +
-                         '🔑 TU CÓDIGO DE SINCRONIZACIÓN:\n' +
-                         storageId + '\n\n' +
-                         '⚠️ IMPORTANTE: Guarda este código para sincronizar en otros dispositivos.\n\n' +
-                         '¿Copiar código al portapapeles?';
-            
-            if (confirm(message)) {
-                self.copyToClipboard(storageId);
-                self.showNotification('📋 Código copiado. Pégalo en tus otros dispositivos.', 5000);
-            } else {
-                alert('Tu código: ' + storageId + '\n\nGuárdalo en un lugar seguro.');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error creando storage:', error);
-            self.showNotification('❌ Error al subir: ' + error.message, 5000);
-        });
+        // Función no necesaria en sincronización manual
+        // Se mantiene para compatibilidad
+        this.syncUpload();
     },
 
     copyToClipboard: function (text) {
