@@ -715,7 +715,10 @@
 
         var self = this;
         
-        fetch(url)
+        // Usar proxy CORS para evitar problemas de CORS
+        var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+        
+        fetch(proxyUrl)
             .then(function(response) {
                 return response.text();
             })
@@ -740,7 +743,10 @@
                         imgUrl = 'https:' + imgUrl;
                     }
                     
-                    fetch(imgUrl)
+                    // Usar proxy CORS también para la imagen
+                    var imgProxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(imgUrl);
+                    
+                    fetch(imgProxyUrl)
                         .then(function(imgResponse) {
                             return imgResponse.blob();
                         })
@@ -758,7 +764,7 @@
                         .catch(function(imgError) {
                             console.log('No se pudo cargar la imagen:', imgError);
                             if (precioMatch) {
-                                self.showNotification('Datos extraidos de Zara correctamente');
+                                self.showNotification('Datos extraidos de Zara (sin imagen)');
                             } else {
                                 self.showNotification('Nombre y referencia extraidos. Ingresa el precio manualmente.');
                             }
@@ -772,9 +778,11 @@
                 }
             })
             .catch(function(error) {
-                console.log('No se pudo extraer el precio automaticamente:', error);
+                console.log('Error al extraer datos de Zara:', error);
                 if (productInfo && productInfo.nombre) {
                     self.showNotification('Nombre y referencia extraidos. Ingresa el precio manualmente.');
+                } else {
+                    self.showNotification('Error: No se pudo conectar con Zara. Verifica la URL.');
                 }
             });
     }
