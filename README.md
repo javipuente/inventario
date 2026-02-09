@@ -27,14 +27,15 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 
 ## 🔄 Sincronización Multi-Dispositivo (GRATIS)
 
-¡Ahora puedes usar tu inventario en **múltiples dispositivos**!
+¡Ahora puedes usar tu inventario en **múltiples dispositivos** con **1 SOLO CLIC**!
 
 **Cómo funciona:**
-1. Haz clic en **☁️ Subir** para guardar tus datos en GitHub
-2. En otro dispositivo, haz clic en **☁️ Descargar** para traer los datos
-3. ¡Listo! Tus datos están sincronizados
+1. Haz clic en **☁️ Subir** para guardar tus datos en la nube
+2. Guarda tu código de sincronización (se genera automáticamente)
+3. En otro dispositivo, haz clic en **☁️ Descargar** y pega tu código
+4. ¡Listo! Tus datos están sincronizados
 
-**100% Gratis** - Usa tu repositorio de GitHub como base de datos.
+**100% Gratis y Automático** - Sin pasos complicados ni copiar/pegar manual.
 
 📖 **Guía completa**: [GUIA_SINCRONIZACION.md](GUIA_SINCRONIZACION.md)
 
@@ -66,8 +67,8 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 ## 💾 Almacenamiento de Datos
 
 - **Local Storage**: Los datos se guardan automáticamente en el navegador
-- **GitHub Sync**: Sincroniza entre dispositivos usando tu repositorio (gratis)
-- **Backup en CSV**: Exporta regularmente como respaldo
+- **Sincronización en la nube**: Sube/descarga con 1 clic usando GitHub Gist (gratis)
+- **Backup automático**: La nube mantiene tus datos seguros
 - **Las fotos** se guardan en Base64 (comprimidas automáticamente)
 
 ## ⚠️ Importante

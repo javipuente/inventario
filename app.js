@@ -1,5 +1,6 @@
 ﻿var inventoryApp = {
     items: [],
+    gistId: null, // Se generará automáticamente en el primer sync
     githubConfig: {
         owner: 'javipuente',
         repo: 'inventario',
@@ -9,6 +10,7 @@
 
     init: function () {
         this.loadItems();
+        this.loadGistId();
         this.setupEvents();
         this.render();
         this.updateStats();
@@ -536,6 +538,15 @@
         this.items = data ? JSON.parse(data) : [];
     },
 
+    loadGistId: function () {
+        this.gistId = localStorage.getItem('gistId');
+    },
+
+    saveGistId: function (id) {
+        this.gistId = id;
+        localStorage.setItem('gistId', id);
+    },
+
     showNotification: function (message, duration) {
         duration = duration || 3000; // 3 segundos por defecto
         
@@ -696,7 +707,7 @@
         reader.readAsText(file, 'UTF-8');
     },
 
-    // ========== FUNCIONES DE SINCRONIZACIÓN CON GITHUB ==========
+    // ========== FUNCIONES DE SINCRONIZACIÓN CON GITHUB GIST ==========
     
     checkLastSync: function () {
         var lastSync = localStorage.getItem('lastSyncTime');
@@ -713,25 +724,35 @@
 
     syncDownload: function () {
         var self = this;
-        self.showNotification('📥 Descargando datos de GitHub...', 2000);
         
-        var url = 'https://raw.githubusercontent.com/' + 
-                  this.githubConfig.owner + '/' + 
-                  this.githubConfig.repo + '/' + 
-                  this.githubConfig.branch + '/' + 
-                  this.githubConfig.dataFile + '?t=' + Date.now();
+        if (!this.gistId) {
+            var gistInput = prompt('Introduce tu código de sincronización (Gist ID):\n\nSi no tienes uno, haz clic en "☁️ Subir" primero.');
+
+            if (!gistInput || gistInput.trim() === '') {
+                return;
+            }
+
+            this.gistId = gistInput.trim();
+            this.saveGistId(this.gistId);
+        }
+        
+        self.showNotification('📥 Descargando datos...', 2000);
+        
+        var url = 'https://api.github.com/gists/' + this.gistId;
         
         fetch(url)
             .then(function(response) {
                 if (!response.ok) {
-                    throw new Error('No se pudo descargar los datos');
+                    throw new Error('Código de sincronización inválido');
                 }
                 return response.json();
             })
-            .then(function(data) {
+            .then(function(gist) {
+                var fileContent = gist.files['inventario.json'].content;
+                var data = JSON.parse(fileContent);
+                
                 if (data.items && Array.isArray(data.items)) {
-                    // Confirmar antes de sobrescribir
-                    var confirmMsg = '¿Descargar ' + data.items.length + ' artículos de GitHub?\n\n' +
+                    var confirmMsg = '¿Descargar ' + data.items.length + ' artículos?\n\n' +
                                    'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
                     
                     if (confirm(confirmMsg)) {
@@ -742,7 +763,7 @@
                         
                         localStorage.setItem('lastSyncTime', new Date().toISOString());
                         
-                        self.showNotification('✅ Descargados ' + data.items.length + ' artículos de GitHub', 4000);
+                        self.showNotification('✅ Descargados ' + data.items.length + ' artículos', 4000);
                     }
                 } else {
                     throw new Error('Formato de datos inválido');
@@ -750,7 +771,11 @@
             })
             .catch(function(error) {
                 console.error('Error descargando:', error);
-                self.showNotification('❌ Error al descargar: ' + error.message, 5000);
+                self.showNotification('❌ Error: ' + error.message + '. Verifica tu código de sincronización.', 5000);
+                
+                // Si falla, limpiar el gistId para que pida uno nuevo
+                localStorage.removeItem('gistId');
+                self.gistId = null;
             });
     },
 
@@ -762,51 +787,106 @@
             return;
         }
         
-        var confirmMsg = '¿Subir ' + this.items.length + ' artículos a GitHub?\n\n' +
-                       'Esto actualizará el archivo en el repositorio.';
-        
-        if (!confirm(confirmMsg)) {
-            return;
-        }
-        
-        self.showNotification('📤 Preparando datos para subir...', 2000);
+        self.showNotification('📤 Subiendo datos...', 2000);
         
         var dataToUpload = {
             items: this.items,
             lastSync: new Date().toISOString()
         };
         
-        // Crear instrucciones para el usuario
-        var jsonContent = JSON.stringify(dataToUpload, null, 2);
-        var blob = new Blob([jsonContent], { type: 'application/json' });
-        var url = URL.createObjectURL(blob);
-        var link = document.createElement('a');
-        link.href = url;
-        link.download = 'inventario-data.json';
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        var gistData = {
+            description: 'Inventario - Sincronización automática',
+            public: false,
+            files: {
+                'inventario.json': {
+                    content: JSON.stringify(dataToUpload, null, 2)
+                }
+            }
+        };
         
-        // Mostrar instrucciones
-        var instructions = '✅ Archivo descargado: inventario-data.json\n\n' +
-                          '📝 PASOS PARA SUBIR A GITHUB:\n\n' +
-                          '1. Ve a: https://github.com/' + this.githubConfig.owner + '/' + this.githubConfig.repo + '\n' +
-                          '2. Haz clic en "inventario-data.json"\n' +
-                          '3. Haz clic en el icono de lápiz (✏️ Edit)\n' +
-                          '4. Borra todo el contenido\n' +
-                          '5. Abre el archivo descargado y copia todo\n' +
-                          '6. Pégalo en GitHub\n' +
-                          '7. Haz clic en "Commit changes"\n\n' +
-                          '¿Quieres abrir GitHub ahora?';
-        
-        if (confirm(instructions)) {
-            window.open('https://github.com/' + this.githubConfig.owner + '/' + this.githubConfig.repo + '/edit/main/inventario-data.json', '_blank');
+        if (this.gistId) {
+            // Actualizar Gist existente
+            fetch('https://api.github.com/gists/' + this.gistId, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(gistData)
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('No se pudo actualizar. Creando nuevo...');
+                }
+                return response.json();
+            })
+            .then(function(gist) {
+                localStorage.setItem('lastSyncTime', new Date().toISOString());
+                self.showNotification('✅ Datos actualizados en la nube (' + self.items.length + ' artículos)', 4000);
+            })
+            .catch(function(error) {
+                console.error('Error actualizando:', error);
+                // Si falla la actualización, crear uno nuevo
+                self.createNewGist(gistData);
+            });
+        } else {
+            // Crear nuevo Gist
+            this.createNewGist(gistData);
         }
+    },
+
+    createNewGist: function (gistData) {
+        var self = this;
         
-        localStorage.setItem('lastSyncTime', new Date().toISOString());
-        this.showNotification('📦 Archivo generado. Sigue las instrucciones para subirlo a GitHub.', 8000);
+        fetch('https://api.github.com/gists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gistData)
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('No se pudo crear la sincronización');
+            }
+            return response.json();
+        })
+        .then(function(gist) {
+            self.saveGistId(gist.id);
+            localStorage.setItem('lastSyncTime', new Date().toISOString());
+            
+            var message = '✅ Datos subidos a la nube\n\n' +
+                         '🔑 TU CÓDIGO DE SINCRONIZACIÓN:\n' +
+                         gist.id + '\n\n' +
+                         '⚠️ IMPORTANTE: Guarda este código para sincronizar en otros dispositivos.\n\n' +
+                         '¿Copiar código al portapapeles?';
+            
+            if (confirm(message)) {
+                self.copyToClipboard(gist.id);
+                self.showNotification('📋 Código copiado. Pégalo en tus otros dispositivos.', 5000);
+            } else {
+                alert('Tu código: ' + gist.id + '\n\nGuárdalo en un lugar seguro.');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error creando Gist:', error);
+            self.showNotification('❌ Error al subir: ' + error.message, 5000);
+        });
+    },
+
+    copyToClipboard: function (text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+        } else {
+            // Fallback para navegadores antiguos
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
     },
 
 };
