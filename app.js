@@ -78,13 +78,6 @@
                 self.importFromExcel(e);
             });
         }
-
-        var zaraUrlInput = document.getElementById('zaraUrl');
-        if (zaraUrlInput) {
-            zaraUrlInput.addEventListener('input', function () {
-                self.extractFromZara();
-            });
-        }
     },
 
     handleImageUpload: function (e) {
@@ -145,15 +138,15 @@
     },
 
     addItem: function () {
-        var referencia = document.getElementById('referencia');
         var nombre = document.getElementById('nombre');
+        var cantidad = document.getElementById('cantidad');
         var descripcion = document.getElementById('descripcion');
         var precioCompra = document.getElementById('precioCompra');
         var precioVenta = document.getElementById('precioVenta');
         var fechaDevolucion = document.getElementById('fechaDevolucion');
         var preview = document.getElementById('preview');
 
-        if (!referencia || !nombre || !precioCompra || !precioVenta) {
+        if (!nombre || !cantidad || !precioCompra || !precioVenta) {
             alert('Error: Faltan campos del formulario');
             return;
         }
@@ -170,8 +163,8 @@
         } else {
             var item = {
                 id: Date.now(),
-                referencia: referencia.value,
                 nombre: nombre.value,
+                cantidad: parseInt(cantidad.value) || 1,
                 descripcion: descripcion ? descripcion.value : '',
                 precioCompra: parseFloat(precioCompra.value),
                 precioVenta: parseFloat(precioVenta.value),
@@ -206,8 +199,8 @@
 
         if (!item) return;
 
-        document.getElementById('referencia').value = item.referencia;
         document.getElementById('nombre').value = item.nombre;
+        document.getElementById('cantidad').value = item.cantidad || 1;
         document.getElementById('descripcion').value = item.descripcion || '';
         document.getElementById('precioCompra').value = item.precioCompra;
         document.getElementById('precioVenta').value = item.precioVenta;
@@ -248,16 +241,16 @@
 
         if (!item) return;
 
-        var referencia = document.getElementById('referencia');
         var nombre = document.getElementById('nombre');
+        var cantidad = document.getElementById('cantidad');
         var descripcion = document.getElementById('descripcion');
         var precioCompra = document.getElementById('precioCompra');
         var precioVenta = document.getElementById('precioVenta');
         var fechaDevolucion = document.getElementById('fechaDevolucion');
         var preview = document.getElementById('preview');
 
-        item.referencia = referencia.value;
         item.nombre = nombre.value;
+        item.cantidad = parseInt(cantidad.value) || 1;
         item.descripcion = descripcion ? descripcion.value : '';
         item.precioCompra = parseFloat(precioCompra.value);
         item.precioVenta = parseFloat(precioVenta.value);
@@ -321,9 +314,8 @@
         var sortOrder = document.getElementById('sortOrder').value;
 
         var filtered = this.items.filter(function (item) {
-            var matchSearch = item.referencia.toLowerCase().includes(search) ||
-                item.nombre.toLowerCase().includes(search) ||
-                item.descripcion.toLowerCase().includes(search);
+            var matchSearch = item.nombre.toLowerCase().includes(search) ||
+                (item.descripcion && item.descripcion.toLowerCase().includes(search));
 
             var matchStatus = status === 'all' ||
                 (status === 'available' && !item.vendido) ||
@@ -391,7 +383,7 @@
             }
 
             html += '<div class="item-header">';
-            html += '<span class="item-ref">' + item.referencia + '</span>';
+            html += '<span class="item-ref">Cantidad: ' + (item.cantidad || 1) + '</span>';
             html += '<span class="item-status ' + (item.vendido ? 'status-sold' : 'status-available') + '">';
             html += item.vendido ? ' Vendido' : ' Disponible';
             html += '</span></div>';
@@ -513,7 +505,7 @@
     },
 
     exportToExcel: function () {
-        var csv = 'Referencia,Nombre,Descripcion,Precio Compra,Precio Venta,Beneficio,Estado,Fecha,Fecha Devolucion,Foto\n';
+        var csv = 'Nombre,Cantidad,Descripcion,Precio Compra,Precio Venta,Beneficio,Estado,Fecha,Fecha Devolucion,Foto\n';
 
         this.items.forEach(function (item) {
             var profit = item.precioVenta - item.precioCompra;
@@ -526,9 +518,9 @@
             var fechaFormateada = new Date(item.fecha).toISOString();
             
             var row = [
-                item.referencia,
                 item.nombre,
-                item.descripcion.replace(/,/g, ';'),
+                item.cantidad || 1,
+                (item.descripcion || '').replace(/,/g, ';'),
                 item.precioCompra.toFixed(2),
                 item.precioVenta.toFixed(2),
                 profit.toFixed(2),
@@ -594,8 +586,8 @@
                         continue;
                     }
 
-                    var referencia = values[0].trim();
-                    var nombre = values[1].trim();
+                    var nombre = values[0].trim();
+                    var cantidad = parseInt(values[1]) || 1;
                     var descripcion = values[2].replace(/;/g, ',').trim();
                     var precioCompra = parseFloat(values[3]);
                     var precioVenta = parseFloat(values[4]);
@@ -614,15 +606,15 @@
                         }
                     }
 
-                    if (!referencia || !nombre || isNaN(precioCompra) || isNaN(precioVenta)) {
+                    if (!nombre || isNaN(precioCompra) || isNaN(precioVenta)) {
                         errors++;
                         continue;
                     }
 
                     var item = {
                         id: Date.now() + i,
-                        referencia: referencia,
                         nombre: nombre,
+                        cantidad: cantidad,
                         descripcion: descripcion,
                         precioCompra: precioCompra,
                         precioVenta: precioVenta,
@@ -657,89 +649,6 @@
         reader.readAsText(file, 'UTF-8');
     },
 
-    extractProductInfo: function (url) {
-        var urlLower = url.toLowerCase();
-        var productInfo = {
-            nombre: '',
-            precio: 0,
-            referencia: '',
-            imagen: ''
-        };
-
-        if (!urlLower.includes('zara.com')) {
-            return null;
-        }
-
-        var matches = url.match(/\/([^\/]+)-p(\d+)\.html/);
-        if (matches) {
-            var slug = matches[1];
-            var codigoProducto = matches[2];
-            
-            productInfo.nombre = slug.split('-').map(function(word) {
-                return word.charAt(0).toUpperCase() + word.slice(1);
-            }).join(' ');
-            
-            var refFormateada = codigoProducto.substring(0, 4) + '/' + 
-                                codigoProducto.substring(4, 7) + '/' + 
-                                codigoProducto.substring(7);
-            
-            productInfo.referencia = refFormateada;
-        }
-
-        return productInfo;
-    },
-
-    extractFromZara: function () {
-        var url = document.getElementById('zaraUrl').value.trim();
-        
-        if (!url) {
-            return;
-        }
-
-        if (!url.toLowerCase().includes('zara.com')) {
-            return;
-        }
-
-        var productInfo = this.extractProductInfo(url);
-        
-        if (productInfo && productInfo.referencia) {
-            document.getElementById('referencia').value = productInfo.referencia;
-        }
-        
-        if (productInfo && productInfo.nombre) {
-            document.getElementById('nombre').value = productInfo.nombre;
-        }
-
-        var descripcionField = document.getElementById('descripcion');
-        if (descripcionField && !descripcionField.value) {
-            descripcionField.value = 'Importado desde Zara - ' + url;
-        }
-
-        // Mostrar mensaje informativo
-        this.showNotification('✅ Nombre y referencia extraidos. Abre la página de Zara para copiar el precio e imagen manualmente.', 5000);
-        
-        // Mostrar instrucciones en consola
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📋 DATOS EXTRAIDOS DE ZARA:');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('✅ Referencia:', productInfo.referencia);
-        console.log('✅ Nombre:', productInfo.nombre);
-        console.log('');
-        console.log('📝 COMPLETA MANUALMENTE:');
-        console.log('1. Abre la URL en una nueva pestaña');
-        console.log('2. Copia el precio y pégalo en "Precio de Compra"');
-        console.log('3. Haz clic derecho en la imagen → "Guardar imagen como..."');
-        console.log('4. Súbela usando el botón "Foto del Artículo"');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🔗 URL:', url);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
-        // Abrir la URL de Zara en nueva pestaña para facilitar el proceso
-        var abrirZara = confirm('¿Quieres abrir la página de Zara en una nueva pestaña para copiar el precio e imagen?');
-        if (abrirZara) {
-            window.open(url, '_blank');
-        }
-    }
 };
 
 document.addEventListener('DOMContentLoaded', function () {

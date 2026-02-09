@@ -5,15 +5,16 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 ## ✨ Características
 
 - ✅ **Añadir artículos** con toda la información necesaria
+- 📊 **Control de cantidad** - gestiona múltiples unidades del mismo artículo
 - 📸 **Subir fotos** de los productos
 - 💰 **Gestión de precios** (compra y venta)
 - 🔄 **Marcar como vendido/disponible**
-- 🗑️ **Eliminar artículos** y editar existentes
-- 🔍 **Buscar y filtrar** por referencia, nombre o estado
+- ✏️ **Editar artículos** existentes
+- 🗑️ **Eliminar artículos**
+- 🔍 **Buscar y filtrar** por nombre o descripción
 - 📊 **Estadísticas en tiempo real**
 - 💾 **Almacenamiento local** (los datos persisten al cerrar el navegador)
 - 📥 **Exportar e Importar** Excel/CSV para backup
-- 🏷️ **Extracción automática desde Zara.com** - pega una URL y extrae nombre, precio e imagen
 - 📅 **Control de devoluciones** con alertas de vencimiento
 - 📱 **Diseño responsive** (funciona en móviles y tablets)
 
@@ -22,44 +23,24 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 **Usa la aplicación directamente desde tu navegador:**
 👉 https://javipuente.github.io/inventario/
 
-## 🆕 Funcionalidad: Extracción de Datos de Zara
-
-Puedes **pegar una URL de Zara.com** y la aplicación extraerá automáticamente:
-- ✅ **Nombre del producto** (desde la URL)
-- ✅ **Referencia/código** (desde la URL)
-- ℹ️ **Precio e imagen**: Por limitaciones de CORS, debes copiarlos manualmente
-
-**¿Cómo usarlo?**
-1. Ve a www.zara.com y encuentra un producto
-2. Copia la URL completa (ej: `https://www.zara.com/es/es/chaqueta-bomber-p04344655.html`)
-3. Pégala en el campo "URL de Zara" en tu inventario
-4. **El nombre y referencia se completarán automáticamente**
-5. La aplicación te ofrecerá abrir la página de Zara para que copies el precio e imagen manualmente
-
-**💡 Tip**: Es más rápido que escribir todo manualmente, especialmente las referencias largas de Zara.
-
-⚠️ **Si encuentras problemas CORS**: Consulta [SOLUCION_CORS_ZARA.md](SOLUCION_CORS_ZARA.md) para soluciones
-
 ## 🗂️ Cómo usar
 
 ### Añadir un artículo
-1. **Opción 1 - Desde Zara.com**:
-   - Pega la URL de Zara en el campo correspondiente
-   - Los datos se extraerán automáticamente
-   - Completa el precio de venta y fecha de devolución
-
-2. **Opción 2 - Manual**:
-   - Rellena el formulario con los datos del producto
-   - Sube una foto (opcional)
-   - Haz clic en "Guardar Artículo"
+1. Rellena el formulario con los datos del producto
+2. **Nombre**: Identifica el tipo de producto
+3. **Cantidad**: Número de unidades que tienes en stock
+4. **Precios**: Compra y venta
+5. **Fecha de devolución** (opcional): Para productos con plazo límite
+6. **Foto** (opcional): Imagen del producto
+7. Haz clic en "Guardar Artículo"
 
 ### Gestionar artículos
-- **Editar**: Haz clic en "Editar" en la tarjeta del producto
+- **Editar**: Haz clic en "Editar" en la tarjeta del producto (puedes actualizar la cantidad)
 - **Marcar como vendido**: Haz clic en "Vendido"
 - **Eliminar**: Haz clic en "Eliminar"
 
 ### Buscar y filtrar
-- Usa la barra de búsqueda para encontrar productos por referencia, nombre o descripción
+- Usa la barra de búsqueda para encontrar productos por nombre o descripción
 - Filtra por estado: Todos / Disponibles / Vendidos
 - Ordena por: Más recientes / Más antiguos / Fecha de devolución
 
@@ -83,9 +64,8 @@ Puedes **pegar una URL de Zara.com** y la aplicación extraerá automáticamente
 
 ## 📋 Campos del Inventario
 
-- **URL de Zara** (opcional): Para autocompletar datos
-- **Número de Referencia**: Código único del producto
-- **Nombre**: Nombre del artículo
+- **Nombre**: Identifica el tipo de artículo
+- **Cantidad**: Número de unidades en stock
 - **Descripción**: Detalles adicionales
 - **Precio de Compra**: Coste del producto
 - **Precio de Venta**: Precio final de venta
@@ -100,8 +80,8 @@ Puedes personalizar los colores y estilos editando el archivo `styles.css`.
 ## 🌐 Requisitos
 
 - Navegador web moderno (Chrome, Firefox, Edge, Safari)
-- Conexión a internet solo para extraer datos de Zara
 - No requiere instalación ni servidor
+- Funciona sin conexión a internet
 
 ## 📱 Uso en Móvil
 
@@ -109,12 +89,7 @@ La aplicación es completamente responsive y funciona perfectamente en dispositi
 
 ## 🔒 Privacidad
 
-Todos tus datos se guardan localmente en tu dispositivo. No se envía información a ningún servidor externo (excepto cuando usas la función de extracción de Zara, que usa proxies públicos).
-
-## 📚 Documentación Adicional
-
-- [Guía de Solución CORS con Zara](SOLUCION_CORS_ZARA.md) - Soluciones si la extracción de Zara no funciona
-- [Proxies CORS Alternativos](PROXIES_CORS_ALTERNATIVOS.md) - Lista de proxies disponibles
+Todos tus datos se guardan localmente en tu dispositivo. No se envía información a ningún servidor externo.
 
 ## 🛠️ Desarrollo Local
 
