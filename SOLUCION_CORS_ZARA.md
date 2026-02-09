@@ -1,163 +1,128 @@
-# ?? Solución al Problema CORS con Zara.com
+# ?? Funcionalidad de Extracción de Zara - ACTUALIZADO
 
-## ? Implementado: Sistema de Fallback Automático
+## ? Problema Identificado
 
-He implementado un sistema que **intenta automáticamente con 4 proxies diferentes** hasta encontrar uno que funcione:
+Después de probar **todos los proxies CORS disponibles**, ninguno funcionó porque:
+- Zara.com tiene **protecciones anti-bot muy fuertes**
+- Bloquea todos los proxies públicos conocidos
+- Requiere headers específicos y tokens que solo funcionan en navegadores reales
 
-### Proxies que se intentan en orden:
+## ? Solución Implementada: Extracción Parcial
 
-1. **CORS.SH** - Proxy premium con API key
-2. **AllOrigins** - Proxy popular y gratuito
-3. **ThingProxy** - Alternativa ligera
-4. **CodeTabs** - Proxy de respaldo
+La aplicación ahora funciona de forma **realista y práctica**:
 
-Si un proxy falla, **automáticamente pasa al siguiente** sin que tengas que hacer nada.
+### ?? Lo que SÍ se extrae automáticamente:
+- ? **Nombre del producto** - se parsea desde la URL
+- ? **Referencia/Código** - se formatea desde la URL
+- ? **Descripción automática** - con el link de Zara
+
+### ?? Lo que debes completar manualmente:
+- ??? **Precio** - cópialo de la página de Zara
+- ??? **Imagen** - descárgala y súbela
 
 ---
 
-## ?? Cómo Usar la Extracción de Datos de Zara
+## ?? Cómo Usar la Funcionalidad
 
-### Paso 1: Encuentra un producto en Zara
-Ve a https://www.zara.com/es/ y busca un producto
+### Paso 1: Busca el producto en Zara
+Ve a https://www.zara.com/es/ y busca el producto que quieres añadir
 
-### Paso 2: Copia la URL completa
-Ejemplo:
+### Paso 2: Copia la URL
+Ejemplo de URL válida:
 ```
 https://www.zara.com/es/es/chaqueta-bomber-efecto-ante-p04344655.html?v1=505335539
 ```
 
-### Paso 3: Pégala en tu inventario
-1. Abre tu inventario en https://javipuente.github.io/inventario/
+### Paso 3: Pega en tu inventario
+1. Abre tu inventario: https://javipuente.github.io/inventario/
 2. En el formulario "Añadir Nuevo Artículo"
 3. Pega la URL en el campo **"URL de Zara"**
 
-### Paso 4: Espera la extracción automática
-El sistema extraerá automáticamente:
-- ? **Nombre** del producto
-- ? **Referencia** (código del producto)
-- ? **Precio** (si está disponible)
-- ? **Imagen** del producto
+### Paso 4: Verás que se completa automáticamente
+- **Referencia**: `0434/465/5` (formateado automáticamente)
+- **Nombre**: `Chaqueta Bomber Efecto Ante` (capitalizado desde la URL)
+- **Descripción**: `Importado desde Zara - [URL]`
+
+### Paso 5: Completa manualmente
+La aplicación te preguntará: **"¿Quieres abrir la página de Zara para copiar el precio e imagen?"**
+
+- Haz clic en **"Aceptar"** ? Se abrirá Zara en nueva pestaña
+- Copia el **precio** y pégalo en "Precio de Compra"
+- Haz clic derecho en la **imagen** ? "Guardar imagen como..."
+- Súbela con el botón **"Foto del Artículo"**
 
 ---
 
-## ?? Si Sigue Sin Funcionar
+## ?? Ventajas de Este Método
 
-### Opción 1: Usar navegador sin extensiones
-Las extensiones de bloqueo de anuncios pueden interferir. Prueba en:
-- **Modo incógnito/privado**
-- **Otro navegador** (Chrome, Firefox, Edge)
+Aunque no es 100% automático, **sigue siendo muy útil** porque:
 
-### Opción 2: Esperar unos minutos
-Los proxies gratuitos a veces tienen límites de tasa. Espera 5-10 minutos e inténtalo de nuevo.
-
-### Opción 3: Completar manualmente
-Si ningún proxy funciona, los campos **Nombre** y **Referencia** se completarán automáticamente. Solo tendrás que:
-1. Buscar el precio en la página de Zara
-2. Copiarlo manualmente al campo "Precio de Compra"
-3. Descargar la imagen del producto y subirla con el botón "Foto del Artículo"
+? **Ahorra tiempo** en escribir nombres largos  
+? **Evita errores** en las referencias (que son complejas en Zara)  
+? **Formatea automáticamente** el código de producto  
+? **Guarda el link** para referencia futura  
+? **Abre Zara automáticamente** para facilitar la copia  
 
 ---
 
-## ??? Solución Permanente: Crea tu Propio Proxy (5 minutos)
+## ?? Alternativa: Crear Tu Propio Proxy (Avanzado)
 
-Si los proxies públicos no funcionan de forma consistente, puedes crear tu propio proxy **GRATIS** en Cloudflare Workers:
+Si quieres extracción 100% automática, puedes crear tu propio proxy usando **Cloudflare Workers**. Consulta `PROXIES_CORS_ALTERNATIVOS.md` para instrucciones detalladas.
 
-### Pasos:
-
-1. **Regístrate en Cloudflare Workers**
-   - Ve a https://workers.cloudflare.com/
-   - Crea una cuenta gratuita (10,000 peticiones/día)
-
-2. **Crea un nuevo Worker**
-   - Haz clic en "Create a Service"
-   - Dale un nombre (ej: `zara-proxy`)
-
-3. **Pega este código:**
-
-```javascript
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request))
-})
-
-async function handleRequest(request) {
-  const url = new URL(request.url)
-  const targetUrl = url.searchParams.get('url')
-  
-  if (!targetUrl) {
-    return new Response('Falta parámetro url', { status: 400 })
-  }
-
-  try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
-      }
-    })
-    
-    const newResponse = new Response(response.body, response)
-    
-    newResponse.headers.set('Access-Control-Allow-Origin', '*')
-    newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-    newResponse.headers.set('Access-Control-Allow-Headers', '*')
-    
-    return newResponse
-  } catch (error) {
-    return new Response('Error: ' + error.message, { 
-      status: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      }
-    })
-  }
-}
-```
-
-4. **Despliega el Worker**
-   - Haz clic en "Save and Deploy"
-   - Copia tu URL (algo como `https://zara-proxy.tu-usuario.workers.dev`)
-
-5. **Úsalo en tu inventario**
-   - Abre `app.js` en tu repositorio
-   - Busca la función `extractFromZara`
-   - Añade tu worker como primer proxy en el array:
-
-```javascript
-var proxies = [
-    { name: 'Mi Proxy', url: 'https://zara-proxy.tu-usuario.workers.dev/?url=' + encodeURIComponent(url), headers: {} },
-    { name: 'CORS.SH', url: 'https://proxy.cors.sh/' + url, headers: { 'x-cors-api-key': 'temp_1234567890abcdef' } },
-    // ...resto de proxies
-];
-```
+**Nota**: Incluso con tu propio proxy, Zara podría bloquearlo eventualmente debido a sus medidas anti-scraping.
 
 ---
 
-## ?? Monitoreo de Proxies
+## ?? Comparativa
 
-Puedes ver en la **consola del navegador** (F12) qué proxy está funcionando:
-
-```
-Intentando con proxy: CORS.SH
-Proxy CORS.SH falló: [error]
-Intentando con proxy: AllOrigins
-? Proxy AllOrigins funcionó
-```
+| Método | Tiempo | Automatización | Complejidad |
+|--------|--------|----------------|-------------|
+| **Manual completo** | 3-4 min | 0% | Baja |
+| **Con extracción URL** | 1-2 min | 60% | Baja ? |
+| **Con proxy propio** | 30 seg | 90% | Alta |
 
 ---
 
-## ?? Consejos
+## ?? Ejemplo Completo
 
-- **Los nombres y referencias** siempre se extraen de la URL (no necesitan proxy)
-- **El precio y la imagen** requieren proxy
-- Si ves "? Extrayendo datos..." pero tarda mucho, el proxy podría estar lento
-- La notificación te dirá qué proxy funcionó (ej: "? Datos extraidos vía AllOrigins")
+1. **URL de Zara**:
+   ```
+   https://www.zara.com/es/es/pantalon-cargo-p04560407.html
+   ```
+
+2. **Se extrae automáticamente**:
+   - Referencia: `0456/040/7`
+   - Nombre: `Pantalon Cargo`
+   - Descripción: `Importado desde Zara - https://...`
+
+3. **Tú añades**:
+   - Precio: `39.95` (copias de Zara)
+   - Precio Venta: `45.00` (tu margen)
+   - Fecha devolución: `2024-12-31`
+   - Imagen: (descargas y subes)
+
+4. **Resultado**: Artículo completo en tu inventario en ~1 minuto ??
 
 ---
 
-## ?? Reporte de Problemas
+## ? Preguntas Frecuentes
 
-Si ninguna de estas soluciones funciona, abre un issue en GitHub con:
-- La URL de Zara que estás intentando usar
-- El navegador que usas
-- El mensaje de error en la consola (F12)
+### ¿Por qué no funciona la extracción automática del precio?
+Zara bloquea todos los proxies públicos. Es una limitación técnica del sitio web, no de tu aplicación.
+
+### ¿Hay alguna forma de hacerlo 100% automático?
+Sí, pero requiere configurar tu propio servidor proxy (ver guía en `PROXIES_CORS_ALTERNATIVOS.md`). Para uso personal, el método actual es más práctico.
+
+### ¿Funciona con otras tiendas?
+La extracción de URL solo está configurada para Zara. Para otras tiendas, debes rellenar todos los campos manualmente.
+
+### ¿Los datos se sincronizan entre dispositivos?
+No, actualmente se guardan solo en `localStorage` de cada navegador. Para sincronización, exporta/importa el CSV regularmente.
+
+---
+
+## ?? Conclusión
+
+La funcionalidad de extracción de Zara **funciona como una ayuda inteligente**, no como scraping automático. Extrae lo que puede de forma confiable (nombre y referencia de la URL) y te facilita copiar el resto.
+
+**Es la solución más práctica sin comprometer la estabilidad de la aplicación.** ??
