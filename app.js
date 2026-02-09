@@ -336,7 +336,7 @@
     },
 
     getFilteredItems: function () {
-        var search = document.getElementById('searchInput').value.toLowerCase();
+        var search = document.getElementById('searchInput').value toLowerCase();
         var status = document.getElementById('filterStatus').value;
         var sortOrder = document.getElementById('sortOrder').value;
 
@@ -480,12 +480,7 @@
 
             container.appendChild(card);
             
-            // Añadir separador visible después de cada tarjeta excepto la última
-            if (items.indexOf(item) < items.length - 1) {
-                var separator = document.createElement('div');
-                separator.style.cssText = 'grid-column: 1 / -1; height: 2px; background: linear-gradient(90deg, transparent, #667eea, transparent); margin: 20px 0;';
-                container.appendChild(separator);
-            }
+            // Separador eliminado - las tarjetas se muestran sin líneas divisorias
         });
     },
 
