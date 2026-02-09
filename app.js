@@ -1,11 +1,18 @@
 ﻿var inventoryApp = {
     items: [],
+    githubConfig: {
+        owner: 'javipuente',
+        repo: 'inventario',
+        branch: 'main',
+        dataFile: 'inventario-data.json'
+    },
 
     init: function () {
         this.loadItems();
         this.setupEvents();
         this.render();
         this.updateStats();
+        this.checkLastSync();
     },
 
     setupEvents: function () {
@@ -76,6 +83,20 @@
         if (importFile) {
             importFile.addEventListener('change', function (e) {
                 self.importFromExcel(e);
+            });
+        }
+
+        var syncDownloadBtn = document.getElementById('syncDownloadBtn');
+        if (syncDownloadBtn) {
+            syncDownloadBtn.addEventListener('click', function () {
+                self.syncDownload();
+            });
+        }
+
+        var syncUploadBtn = document.getElementById('syncUploadBtn');
+        if (syncUploadBtn) {
+            syncUploadBtn.addEventListener('click', function () {
+                self.syncUpload();
             });
         }
     },
@@ -319,7 +340,7 @@
     },
 
     getFilteredItems: function () {
-        var search = document.getElementById('searchInput').value.toLowerCase();
+        var search = document.getElementById('searchInput').value toLowerCase();
         var status = document.getElementById('filterStatus').value;
         var sortOrder = document.getElementById('sortOrder').value;
 
@@ -673,6 +694,119 @@
         };
 
         reader.readAsText(file, 'UTF-8');
+    },
+
+    // ========== FUNCIONES DE SINCRONIZACIÓN CON GITHUB ==========
+    
+    checkLastSync: function () {
+        var lastSync = localStorage.getItem('lastSyncTime');
+        if (lastSync) {
+            var syncDate = new Date(lastSync);
+            var now = new Date();
+            var diffHours = Math.floor((now - syncDate) / (1000 * 60 * 60));
+            
+            if (diffHours > 24) {
+                this.showNotification('⚠️ Hace más de 24h que no sincronizas. Considera descargar los datos más recientes.', 5000);
+            }
+        }
+    },
+
+    syncDownload: function () {
+        var self = this;
+        self.showNotification('📥 Descargando datos de GitHub...', 2000);
+        
+        var url = 'https://raw.githubusercontent.com/' + 
+                  this.githubConfig.owner + '/' + 
+                  this.githubConfig.repo + '/' + 
+                  this.githubConfig.branch + '/' + 
+                  this.githubConfig.dataFile + '?t=' + Date.now();
+        
+        fetch(url)
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('No se pudo descargar los datos');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.items && Array.isArray(data.items)) {
+                    // Confirmar antes de sobrescribir
+                    var confirmMsg = '¿Descargar ' + data.items.length + ' artículos de GitHub?\n\n' +
+                                   'Esto sobrescribirá tus ' + self.items.length + ' artículos locales.';
+                    
+                    if (confirm(confirmMsg)) {
+                        self.items = data.items;
+                        self.saveItems();
+                        self.render();
+                        self.updateStats();
+                        
+                        localStorage.setItem('lastSyncTime', new Date().toISOString());
+                        
+                        self.showNotification('✅ Descargados ' + data.items.length + ' artículos de GitHub', 4000);
+                    }
+                } else {
+                    throw new Error('Formato de datos inválido');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error descargando:', error);
+                self.showNotification('❌ Error al descargar: ' + error.message, 5000);
+            });
+    },
+
+    syncUpload: function () {
+        var self = this;
+        
+        if (this.items.length === 0) {
+            this.showNotification('⚠️ No hay artículos para subir', 3000);
+            return;
+        }
+        
+        var confirmMsg = '¿Subir ' + this.items.length + ' artículos a GitHub?\n\n' +
+                       'Esto actualizará el archivo en el repositorio.';
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        self.showNotification('📤 Preparando datos para subir...', 2000);
+        
+        var dataToUpload = {
+            items: this.items,
+            lastSync: new Date().toISOString()
+        };
+        
+        // Crear instrucciones para el usuario
+        var jsonContent = JSON.stringify(dataToUpload, null, 2);
+        var blob = new Blob([jsonContent], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = 'inventario-data.json';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Mostrar instrucciones
+        var instructions = '✅ Archivo descargado: inventario-data.json\n\n' +
+                          '📝 PASOS PARA SUBIR A GITHUB:\n\n' +
+                          '1. Ve a: https://github.com/' + this.githubConfig.owner + '/' + this.githubConfig.repo + '\n' +
+                          '2. Haz clic en "inventario-data.json"\n' +
+                          '3. Haz clic en el icono de lápiz (✏️ Edit)\n' +
+                          '4. Borra todo el contenido\n' +
+                          '5. Abre el archivo descargado y copia todo\n' +
+                          '6. Pégalo en GitHub\n' +
+                          '7. Haz clic en "Commit changes"\n\n' +
+                          '¿Quieres abrir GitHub ahora?';
+        
+        if (confirm(instructions)) {
+            window.open('https://github.com/' + this.githubConfig.owner + '/' + this.githubConfig.repo + '/edit/main/inventario-data.json', '_blank');
+        }
+        
+        localStorage.setItem('lastSyncTime', new Date().toISOString());
+        this.showNotification('📦 Archivo generado. Sigue las instrucciones para subirlo a GitHub.', 8000);
     },
 
 };
