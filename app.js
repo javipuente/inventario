@@ -326,12 +326,48 @@
         var item = this.items.find(function (i) {
             return i.id === id;
         });
-        if (item) {
-            item.vendido = !item.vendido;
+        
+        if (!item) return;
+        
+        if (item.vendido) {
+            // Si está vendido, devolverlo a disponible
+            item.vendido = false;
             this.saveItems();
             this.render();
             this.updateStats();
-            this.showNotification(item.vendido ? 'Marcado como vendido' : 'Marcado como disponible');
+            this.showNotification('Artículo devuelto a disponible');
+        } else {
+            // Si está disponible, vender una unidad
+            if (item.cantidad > 1) {
+                // Si hay más de 1 unidad, reducir cantidad y crear uno vendido
+                item.cantidad -= 1;
+                
+                // Crear nuevo artículo vendido con cantidad 1
+                var itemVendido = {
+                    id: Date.now(),
+                    nombre: item.nombre,
+                    talla: item.talla,
+                    cantidad: 1,
+                    descripcion: item.descripcion,
+                    precioCompra: item.precioCompra,
+                    precioVenta: item.precioVenta,
+                    fechaDevolucion: item.fechaDevolucion,
+                    foto: item.foto,
+                    vendido: true,
+                    fecha: new Date().toISOString()
+                };
+                
+                this.items.push(itemVendido);
+                this.showNotification('1 unidad vendida. Quedan ' + item.cantidad + ' disponibles');
+            } else {
+                // Si solo hay 1 unidad, marcar como vendido
+                item.vendido = true;
+                this.showNotification('Artículo marcado como vendido');
+            }
+            
+            this.saveItems();
+            this.render();
+            this.updateStats();
         }
     },
 
@@ -459,7 +495,11 @@
 
             html += '<div class="item-actions">';
             html += '<button class="edit-btn">Editar</button>';
-            html += '<button class="toggle-sold">' + (item.vendido ? 'Disponible' : 'Vendido') + '</button>';
+            if (item.vendido) {
+                html += '<button class="toggle-sold">Devolver</button>';
+            } else {
+                html += '<button class="toggle-sold">Vender 1</button>';
+            }
             html += '<button class="delete-btn">Eliminar</button>';
             html += '</div>';
 
