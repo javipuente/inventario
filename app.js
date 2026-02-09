@@ -484,7 +484,8 @@
         var inventoryValue = this.items.filter(function (item) {
             return !item.vendido;
         }).reduce(function (sum, item) {
-            return sum + item.precioCompra;
+            var cantidad = item.cantidad || 1;
+            return sum + (item.precioCompra * cantidad);
         }, 0);
 
         document.getElementById('totalItems').textContent = total;
