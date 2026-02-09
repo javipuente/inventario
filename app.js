@@ -344,9 +344,8 @@
             var matchSearch = item.nombre.toLowerCase().includes(search) ||
                 (item.descripcion && item.descripcion.toLowerCase().includes(search));
 
-            var matchStatus = status === 'all' ||
-                (status === 'available' && !item.vendido) ||
-                (status === 'sold' && item.vendido);
+            var matchStatus = (status === 'available' && !item.vendido) ||
+                             (status === 'sold' && item.vendido);
 
             return matchSearch && matchStatus;
         });
