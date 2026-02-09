@@ -336,7 +336,7 @@
     },
 
     getFilteredItems: function () {
-        var search = document.getElementById('searchInput').value toLowerCase();
+        var search = document.getElementById('searchInput').value.toLowerCase();
         var status = document.getElementById('filterStatus').value;
         var sortOrder = document.getElementById('sortOrder').value;
 
