@@ -715,11 +715,20 @@
 
         var self = this;
         
-        // Usar proxy CORS para evitar problemas de CORS
-        var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+        // Usar cors.sh que funciona mejor con Zara
+        var proxyUrl = 'https://proxy.cors.sh/' + url;
         
-        fetch(proxyUrl)
+        self.showNotification('⏳ Extrayendo datos de Zara...' );
+        
+        fetch(proxyUrl, {
+            headers: {
+                'x-cors-api-key': 'temp_1234567890abcdef'
+            }
+        })
             .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Error al conectar con Zara');
+                }
                 return response.text();
             })
             .then(function(html) {
@@ -743,10 +752,8 @@
                         imgUrl = 'https:' + imgUrl;
                     }
                     
-                    // Usar proxy CORS también para la imagen
-                    var imgProxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(imgUrl);
-                    
-                    fetch(imgProxyUrl)
+                    // Descargar imagen directamente (las imágenes de Zara no tienen CORS)
+                    fetch(imgUrl)
                         .then(function(imgResponse) {
                             return imgResponse.blob();
                         })
@@ -756,7 +763,7 @@
                                 self.resizeImage(reader.result, function(resizedImage) {
                                     document.getElementById('preview').src = resizedImage;
                                     document.getElementById('previewContainer').style.display = 'block';
-                                    self.showNotification('Datos e imagen extraidos de Zara correctamente');
+                                    self.showNotification('✅ Datos e imagen extraidos de Zara correctamente');
                                 });
                             };
                             reader.readAsDataURL(blob);
@@ -764,25 +771,25 @@
                         .catch(function(imgError) {
                             console.log('No se pudo cargar la imagen:', imgError);
                             if (precioMatch) {
-                                self.showNotification('Datos extraidos de Zara (sin imagen)');
+                                self.showNotification('✅ Datos extraidos de Zara (sin imagen)');
                             } else {
-                                self.showNotification('Nombre y referencia extraidos. Ingresa el precio manualmente.');
+                                self.showNotification('ℹ️ Nombre y referencia extraidos. Ingresa el precio manualmente.');
                             }
                         });
                 } else {
                     if (precioMatch) {
-                        self.showNotification('Datos extraidos de Zara correctamente');
+                        self.showNotification('✅ Datos extraidos de Zara correctamente');
                     } else {
-                        self.showNotification('Nombre y referencia extraidos. Ingresa el precio manualmente.');
+                        self.showNotification('ℹ️ Nombre y referencia extraidos. Ingresa el precio manualmente.');
                     }
                 }
             })
             .catch(function(error) {
                 console.log('Error al extraer datos de Zara:', error);
                 if (productInfo && productInfo.nombre) {
-                    self.showNotification('Nombre y referencia extraidos. Ingresa el precio manualmente.');
+                    self.showNotification('ℹ️ Nombre y referencia extraidos. Completa los demás campos manualmente.');
                 } else {
-                    self.showNotification('Error: No se pudo conectar con Zara. Verifica la URL.');
+                    self.showNotification('⚠️ No se pudo conectar. Verifica la URL o completa manualmente.');
                 }
             });
     }
