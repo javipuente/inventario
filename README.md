@@ -8,56 +8,87 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 - 📸 **Subir fotos** de los productos
 - 💰 **Gestión de precios** (compra y venta)
 - 🔄 **Marcar como vendido/disponible**
-- 🗑️ **Eliminar artículos**
+- 🗑️ **Eliminar artículos** y editar existentes
 - 🔍 **Buscar y filtrar** por referencia, nombre o estado
 - 📊 **Estadísticas en tiempo real**
 - 💾 **Almacenamiento local** (los datos persisten al cerrar el navegador)
-- 📥 **Exportar a Excel/CSV** para backup
+- 📥 **Exportar e Importar** Excel/CSV para backup
+- 🏷️ **Extracción automática desde Zara.com** - pega una URL y extrae nombre, precio e imagen
+- 📅 **Control de devoluciones** con alertas de vencimiento
 - 📱 **Diseño responsive** (funciona en móviles y tablets)
 
-## 🚀 Cómo usar
+## 🚀 Acceso Online
 
-1. **Abrir la aplicación**: Simplemente abre el archivo `index.html` en tu navegador web favorito (Chrome, Firefox, Edge, etc.)
+**Usa la aplicación directamente desde tu navegador:**
+👉 https://javipuente.github.io/inventario/
 
-2. **Añadir un artículo**:
+## 🆕 Nueva Funcionalidad: Extracción de Datos de Zara
+
+Ahora puedes **pegar una URL de Zara.com** y la aplicación extraerá automáticamente:
+- ✅ Nombre del producto
+- ✅ Referencia/código
+- ✅ Precio
+- ✅ Imagen del producto
+
+**¿Cómo usarlo?**
+1. Ve a www.zara.com y encuentra un producto
+2. Copia la URL completa (ej: `https://www.zara.com/es/es/chaqueta-bomber-p04344655.html`)
+3. Pégala en el campo "URL de Zara" en tu inventario
+4. ¡Los datos se completarán automáticamente!
+
+⚠️ **Si encuentras problemas CORS**: Consulta [SOLUCION_CORS_ZARA.md](SOLUCION_CORS_ZARA.md) para soluciones
+
+## 🗂️ Cómo usar
+
+### Añadir un artículo
+1. **Opción 1 - Desde Zara.com**:
+   - Pega la URL de Zara en el campo correspondiente
+   - Los datos se extraerán automáticamente
+   - Completa el precio de venta y fecha de devolución
+
+2. **Opción 2 - Manual**:
    - Rellena el formulario con los datos del producto
    - Sube una foto (opcional)
    - Haz clic en "Guardar Artículo"
 
-3. **Gestionar artículos**:
-   - **Marcar como vendido**: Haz clic en el botón "✅ Vendido"
-   - **Eliminar**: Haz clic en el botón "🗑️ Eliminar"
-   - **Ver foto ampliada**: Haz clic en la imagen del producto
+### Gestionar artículos
+- **Editar**: Haz clic en "Editar" en la tarjeta del producto
+- **Marcar como vendido**: Haz clic en "Vendido"
+- **Eliminar**: Haz clic en "Eliminar"
 
-4. **Buscar y filtrar**:
-   - Usa la barra de búsqueda para encontrar productos por referencia o nombre
-   - Usa el selector de estado para ver solo disponibles o vendidos
+### Buscar y filtrar
+- Usa la barra de búsqueda para encontrar productos por referencia, nombre o descripción
+- Filtra por estado: Todos / Disponibles / Vendidos
+- Ordena por: Más recientes / Más antiguos / Fecha de devolución
 
-5. **Exportar datos**:
-   - Haz clic en "📊 Exportar a Excel"
-   - Se descargará un archivo CSV que puedes abrir con Excel o Google Sheets
+### Exportar/Importar datos
+- **Exportar**: Haz clic en "📊 Exportar a Excel" para descargar un CSV con todos tus datos
+- **Importar**: Haz clic en "📥 Importar Excel" para cargar un archivo CSV previamente exportado
 
 ## 💾 Almacenamiento de Datos
 
 - **Local Storage**: Los datos se guardan automáticamente en el navegador
-- **Backup en Excel**: Puedes exportar los datos regularmente como archivo CSV
-- **Las fotos** se guardan en Base64 dentro del navegador
+- **Backup en CSV**: Exporta regularmente como respaldo
+- **Las fotos** se guardan en Base64 (comprimidas automáticamente)
+- **Sincronización entre dispositivos**: Actualmente no disponible (solo local)
 
 ## ⚠️ Importante
 
-- Los datos se guardan en tu navegador local
+- Los datos se guardan solo en tu navegador local
 - Si borras los datos del navegador, perderás el inventario
 - **Recomendación**: Exporta a Excel regularmente como backup
-- Las fotos grandes pueden ocupar mucho espacio en el navegador
+- Las imágenes se comprimen automáticamente para ahorrar espacio
 
 ## 📋 Campos del Inventario
 
+- **URL de Zara** (opcional): Para autocompletar datos
 - **Número de Referencia**: Código único del producto
 - **Nombre**: Nombre del artículo
-- **Descripción**: Detalles adicionales del producto
-- **Precio de Compra**: Lo que te costó al distribuidor
-- **Precio de Venta**: Precio al que lo vendes en tienda
-- **Foto**: Imagen del producto
+- **Descripción**: Detalles adicionales
+- **Precio de Compra**: Coste del producto
+- **Precio de Venta**: Precio final de venta
+- **Fecha de Devolución**: Límite para devolver el producto
+- **Foto**: Imagen del producto (comprimida automáticamente)
 - **Estado**: Vendido o Disponible
 
 ## 🎨 Personalización
@@ -67,7 +98,7 @@ Puedes personalizar los colores y estilos editando el archivo `styles.css`.
 ## 🌐 Requisitos
 
 - Navegador web moderno (Chrome, Firefox, Edge, Safari)
-- No requiere conexión a internet
+- Conexión a internet solo para extraer datos de Zara
 - No requiere instalación ni servidor
 
 ## 📱 Uso en Móvil
@@ -76,8 +107,23 @@ La aplicación es completamente responsive y funciona perfectamente en dispositi
 
 ## 🔒 Privacidad
 
-Todos tus datos se guardan localmente en tu dispositivo. No se envía información a ningún servidor externo.
+Todos tus datos se guardan localmente en tu dispositivo. No se envía información a ningún servidor externo (excepto cuando usas la función de extracción de Zara, que usa proxies públicos).
+
+## 📚 Documentación Adicional
+
+- [Guía de Solución CORS con Zara](SOLUCION_CORS_ZARA.md) - Soluciones si la extracción de Zara no funciona
+- [Proxies CORS Alternativos](PROXIES_CORS_ALTERNATIVOS.md) - Lista de proxies disponibles
+
+## 🛠️ Desarrollo Local
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/javipuente/inventario.git
+
+# Abrir index.html en tu navegador
+# No se requiere servidor web
+```
 
 ---
 
-**¡Listo para usar! Simplemente abre index.html y comienza a gestionar tu inventario.**
+**¡Listo para usar! Accede a https://javipuente.github.io/inventario/ y comienza a gestionar tu inventario.**
