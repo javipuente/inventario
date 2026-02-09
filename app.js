@@ -139,6 +139,7 @@
 
     addItem: function () {
         var nombre = document.getElementById('nombre');
+        var talla = document.getElementById('talla');
         var cantidad = document.getElementById('cantidad');
         var descripcion = document.getElementById('descripcion');
         var precioCompra = document.getElementById('precioCompra');
@@ -146,8 +147,13 @@
         var fechaDevolucion = document.getElementById('fechaDevolucion');
         var preview = document.getElementById('preview');
 
-        if (!nombre || !cantidad || !precioCompra || !precioVenta) {
+        if (!nombre || !talla || !cantidad || !precioCompra || !precioVenta) {
             alert('Error: Faltan campos del formulario');
+            return;
+        }
+
+        if (!talla.value) {
+            alert('Error: Debes seleccionar una talla');
             return;
         }
 
@@ -164,6 +170,7 @@
             var item = {
                 id: Date.now(),
                 nombre: nombre.value,
+                talla: talla.value,
                 cantidad: parseInt(cantidad.value) || 1,
                 descripcion: descripcion ? descripcion.value : '',
                 precioCompra: parseFloat(precioCompra.value),
@@ -200,6 +207,7 @@
         if (!item) return;
 
         document.getElementById('nombre').value = item.nombre;
+        document.getElementById('talla').value = item.talla || 'M';
         document.getElementById('cantidad').value = item.cantidad || 1;
         document.getElementById('descripcion').value = item.descripcion || '';
         document.getElementById('precioCompra').value = item.precioCompra;
@@ -242,6 +250,7 @@
         if (!item) return;
 
         var nombre = document.getElementById('nombre');
+        var talla = document.getElementById('talla');
         var cantidad = document.getElementById('cantidad');
         var descripcion = document.getElementById('descripcion');
         var precioCompra = document.getElementById('precioCompra');
@@ -250,6 +259,7 @@
         var preview = document.getElementById('preview');
 
         item.nombre = nombre.value;
+        item.talla = talla.value;
         item.cantidad = parseInt(cantidad.value) || 1;
         item.descripcion = descripcion ? descripcion.value : '';
         item.precioCompra = parseFloat(precioCompra.value);
@@ -383,7 +393,7 @@
             }
 
             html += '<div class="item-header">';
-            html += '<span class="item-ref">Cantidad: ' + (item.cantidad || 1) + '</span>';
+            html += '<span class="item-ref">Talla: ' + (item.talla || 'M') + ' | Cantidad: ' + (item.cantidad || 1) + '</span>';
             html += '<span class="item-status ' + (item.vendido ? 'status-sold' : 'status-available') + '">';
             html += item.vendido ? ' Vendido' : ' Disponible';
             html += '</span></div>';
@@ -505,7 +515,7 @@
     },
 
     exportToExcel: function () {
-        var csv = 'Nombre,Cantidad,Descripcion,Precio Compra,Precio Venta,Beneficio,Estado,Fecha,Fecha Devolucion,Foto\n';
+        var csv = 'Nombre,Talla,Cantidad,Descripcion,Precio Compra,Precio Venta,Beneficio,Estado,Fecha,Fecha Devolucion,Foto\n';
 
         this.items.forEach(function (item) {
             var profit = item.precioVenta - item.precioCompra;
@@ -519,6 +529,7 @@
             
             var row = [
                 item.nombre,
+                item.talla || 'M',
                 item.cantidad || 1,
                 (item.descripcion || '').replace(/,/g, ';'),
                 item.precioCompra.toFixed(2),
@@ -581,23 +592,24 @@
                     }
                     values.push(currentValue);
                     
-                    if (values.length < 8) {
+                    if (values.length < 9) {
                         errors++;
                         continue;
                     }
 
                     var nombre = values[0].trim();
-                    var cantidad = parseInt(values[1]) || 1;
-                    var descripcion = values[2].replace(/;/g, ',').trim();
-                    var precioCompra = parseFloat(values[3]);
-                    var precioVenta = parseFloat(values[4]);
-                    var vendido = values[6].trim() === 'Vendido';
-                    var fecha = values[7] ? values[7].trim() : new Date().toISOString();
-                    var fechaDevolucion = values[8] ? values[8].trim() : '';
+                    var talla = values[1].trim() || 'M';
+                    var cantidad = parseInt(values[2]) || 1;
+                    var descripcion = values[3].replace(/;/g, ',').trim();
+                    var precioCompra = parseFloat(values[4]);
+                    var precioVenta = parseFloat(values[5]);
+                    var vendido = values[7].trim() === 'Vendido';
+                    var fecha = values[8] ? values[8].trim() : new Date().toISOString();
+                    var fechaDevolucion = values[9] ? values[9].trim() : '';
                     var foto = '';
                     
-                    if (values[9]) {
-                        foto = values[9].trim();
+                    if (values[10]) {
+                        foto = values[10].trim();
                         foto = foto.replace(/^"/, '').replace(/"$/, '');
                         foto = foto.replace(/\|\|\|COMMA\|\|\|/g, ',');
                         
@@ -614,6 +626,7 @@
                     var item = {
                         id: Date.now() + i,
                         nombre: nombre,
+                        talla: talla,
                         cantidad: cantidad,
                         descripcion: descripcion,
                         precioCompra: precioCompra,

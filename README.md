@@ -65,6 +65,7 @@ Aplicación web completa para gestionar el inventario de una tienda con funciona
 ## 📋 Campos del Inventario
 
 - **Nombre**: Identifica el tipo de artículo
+- **Talla**: Talla del producto (XS, S, M, L, XL)
 - **Cantidad**: Número de unidades en stock
 - **Descripción**: Detalles adicionales
 - **Precio de Compra**: Coste del producto
